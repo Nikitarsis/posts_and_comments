@@ -21,14 +21,6 @@ type IHaveContent interface {
 	SetContent(data content)
 }
 
-// Структура поддерживает комментарии
-type IHaveComments interface {
-	GetCommentsId() []msgId
-	AddCommentsId(ids ...msgId)
-	RemoveCommentsId(ids ...msgId)
-	GetCommentsNum() uint
-}
-
 // Структура может иметь родительский элемент(для комментариев-ответов)
 type IHaveParent interface {
 	GetParentId() (msgId, bool)
@@ -46,12 +38,6 @@ type IHaveChildren interface {
 type IMessage interface {
 	IHaveMessageId
 	IHaveContent
-}
-
-// Пост, который может иметь комментарии
-type IPost interface {
-	IHaveMessageId
-	IHaveComments
 }
 
 // Комментарий, который может ссылаться
