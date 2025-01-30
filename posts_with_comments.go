@@ -43,17 +43,17 @@ func (c CommentPost) getComments(ids ...msgId) ([]IComment, error) {
 func (c CommentPost) addComments(ids ...msgId) error {
 	if !c.CanComment() {
 		str_id := fmt.Sprint(c.post.GetMessageId())
-		return fmt.Errorf("post doesn't allow to add commentaries%s", str_id)
+		return fmt.Errorf("post doesn't allow to add commentaries %s", str_id)
 	}
 	c.post.AddChildrenIds(ids...)
 	for _, id := range ids {
-		c.comments[id] = NewComment(id, c.post.GetMessageId())
+		c.comments[id] = NewPost(id, c.post.GetMessageId())
 	}
 	return nil
 }
 
 func NewCommentPost(id msgId, allowComments bool) *CommentPost {
-	post := NewInitComment(id)
+	post := NewInitPost(id)
 	comments := make(map[msgId]IComment)
 	return &CommentPost{post, comments, allowComments}
 }
@@ -66,6 +66,6 @@ func NewCommentPostWithComments(id msgId, allowComment bool, comments ...ICommen
 		commentMap[cid] = comment
 		commentIds[i] = cid
 	}
-	post := NewPostWithComment(id, commentIds...)
+	post := NewPostWithChildren(id, id, commentIds...)
 	return &CommentPost{post, commentMap, allowComment}
 }
