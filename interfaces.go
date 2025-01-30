@@ -40,7 +40,7 @@ type IMessage interface {
 }
 
 // Комментарий, который может ссылаться
-type IComment interface {
+type IPost interface {
 	IHaveMessageId
 	IHaveParent
 	IHaveChildren

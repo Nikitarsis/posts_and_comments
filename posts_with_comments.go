@@ -4,9 +4,13 @@ import (
 	"fmt"
 )
 
+/*
+Реализация поста с комментарием
+*/
 type CommentPost struct {
-	post             IComment
-	comments         map[msgId]IComment
+	post     IPost
+	comments map[msgId]IPost
+	//
 	allowNewcomments bool
 }
 
@@ -22,12 +26,12 @@ func (c CommentPost) CanComment() bool {
 	return c.allowNewcomments
 }
 
-func (c CommentPost) getPost() IComment {
+func (c CommentPost) getPost() IPost {
 	return c.post
 }
 
-func (c CommentPost) getComments(ids ...msgId) ([]IComment, error) {
-	ret := make([]IComment, len(ids))
+func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
+	ret := make([]IPost, len(ids))
 	for i, id := range ids {
 		comment, check := c.comments[id]
 		if !check {
@@ -54,12 +58,12 @@ func (c CommentPost) addComments(ids ...msgId) error {
 
 func NewCommentPost(id msgId, allowComments bool) *CommentPost {
 	post := NewInitPost(id)
-	comments := make(map[msgId]IComment)
+	comments := make(map[msgId]IPost)
 	return &CommentPost{post, comments, allowComments}
 }
 
-func NewCommentPostWithComments(id msgId, allowComment bool, comments ...IComment) *CommentPost {
-	commentMap := make(map[msgId]IComment, len(comments))
+func NewCommentPostWithComments(id msgId, allowComment bool, comments ...IPost) *CommentPost {
+	commentMap := make(map[msgId]IPost, len(comments))
 	commentIds := make([]msgId, len(comments))
 	for i, comment := range comments {
 		cid := comment.GetMessageId()
