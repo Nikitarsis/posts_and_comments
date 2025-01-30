@@ -15,8 +15,9 @@ type IHaveContent interface {
 
 type IHaveComments interface {
 	GetCommentsId() []msgId
-	AddCommentId(ids ...msgId)
-	RemoveCommentId(ids ...msgId)
+	AddCommentsId(ids ...msgId)
+	RemoveCommentsId(ids ...msgId)
+	GetCommentsNum() uint
 }
 
 type IHaveParent interface {

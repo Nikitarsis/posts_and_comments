@@ -23,22 +23,30 @@ func (p Post) GetCommentsId() []msgId {
 	return ret
 }
 
-func (p *Post) AddCommentId(ids ...msgId) {
+func (p *Post) AddCommentsId(ids ...msgId) {
 	for _, id := range ids {
 		p.commentsIds[id] = struct{}{}
 	}
 }
 
-func (p *Post) RemoveCommentId(ids ...msgId) {
+func (p *Post) RemoveCommentsId(ids ...msgId) {
 	for _, id := range ids {
 		delete(p.commentsIds, id)
 	}
 }
 
-func NewPost(id msgId, commentIds ...msgId) *Post {
+func (p Post) GetCommentsNum() uint {
+	return uint(len(p.commentsIds))
+}
+
+func NewPostWithComment(id msgId, commentIds ...msgId) *Post {
 	comMap := make(map[msgId]struct{}, len(commentIds))
 	for commentId := range commentIds {
 		comMap[msgId(commentId)] = struct{}{}
 	}
 	return &Post{id, comMap}
+}
+
+func NewPost(id msgId) *Post {
+	return &Post{id, map[msgId]struct{}{}}
 }

@@ -27,7 +27,7 @@ func (c Comment) GetChildrenIds() []msgId {
 	return ret
 }
 
-func (c *Comment) SetChildrenIds(ids ...msgId) {
+func (c *Comment) AddChildrenIds(ids ...msgId) {
 	for _, id := range ids {
 		c.children[id] = struct{}{}
 	}
@@ -37,4 +37,16 @@ func (c *Comment) RemoveChildrenIds(ids ...msgId) {
 	for _, id := range ids {
 		delete(c.children, id)
 	}
+}
+
+func NewComment(id msgId, parent msgId) *Comment {
+	return &Comment{id, parent, make(map[msgId]struct{})}
+}
+
+func CommentWithChildren(id msgId, parent msgId, children ...msgId) *Comment {
+	childrenMap := make(map[msgId]struct{}, len(children))
+	for _, child := range children {
+		childrenMap[child] = struct{}{}
+	}
+	return &Comment{id, parent, childrenMap}
 }
