@@ -1,5 +1,7 @@
 package comments_and_posts
 
+import "cmp"
+
 type Comment struct {
 	id       msgId
 	parent   msgId
@@ -9,8 +11,8 @@ type Comment struct {
 func (c Comment) GetMessageId() msgId {
 	return c.id
 }
-func (c Comment) GetParentId() msgId {
-	return c.parent
+func (c Comment) GetParentId() (msgId, bool) {
+	return c.parent, cmp.Compare(c.id, c.parent) == 0
 }
 
 func (c *Comment) SetParentId(id msgId) {
@@ -37,6 +39,10 @@ func (c *Comment) RemoveChildrenIds(ids ...msgId) {
 	for _, id := range ids {
 		delete(c.children, id)
 	}
+}
+
+func NewInitComment(id msgId) *Comment {
+	return &Comment{id, id, make(map[msgId]struct{})}
 }
 
 func NewComment(id msgId, parent msgId) *Comment {

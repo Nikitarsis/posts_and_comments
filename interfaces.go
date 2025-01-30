@@ -31,7 +31,7 @@ type IHaveComments interface {
 
 // Структура может иметь родительский элемент(для комментариев-ответов)
 type IHaveParent interface {
-	GetParentId() msgId
+	GetParentId() (msgId, bool)
 	SetParentId(id msgId)
 }
 
