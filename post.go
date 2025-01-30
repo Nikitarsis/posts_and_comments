@@ -26,14 +26,6 @@ func (c Post) GetParentId() (msgId, bool) {
 }
 
 /*
-Устанавливает ID сообщения родителя
-*/
-//TODO: Подумать над необходимостью
-func (c *Post) SetParentId(id msgId) {
-	c.parent = id
-}
-
-/*
 Получает дочерние ID
 */
 func (c Post) GetChildrenIds() []msgId {

@@ -24,7 +24,6 @@ type IHaveContent interface {
 // Структура может иметь родительский элемент(для комментариев-ответов)
 type IHaveParent interface {
 	GetParentId() (msgId, bool)
-	SetParentId(id msgId)
 }
 
 // Структура может иметь дочерние элементы(для комментариев с ответами)
