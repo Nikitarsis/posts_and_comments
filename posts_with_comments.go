@@ -10,7 +10,7 @@ import (
 type CommentPost struct {
 	post     IPost
 	comments map[msgId]IPost
-	//
+	//TODO: Подумать над выделенеием в отдельную область
 	allowNewcomments bool
 }
 
@@ -26,10 +26,16 @@ func (c CommentPost) CanComment() bool {
 	return c.allowNewcomments
 }
 
+/*
+Возвращает сам пост
+*/
 func (c CommentPost) getPost() IPost {
 	return c.post
 }
 
+/*
+Получает комментарии по ID, возвращает nil и ошибку, если ID комментария нет
+*/
 func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
 	ret := make([]IPost, len(ids))
 	for i, id := range ids {
@@ -44,6 +50,9 @@ func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
 	return ret, nil
 }
 
+/*
+Добавляет комментарии, возвращает ошибку, если комментировать нельзя
+*/
 func (c CommentPost) addComments(ids ...msgId) error {
 	if !c.CanComment() {
 		str_id := fmt.Sprint(c.post.GetMessageId())
@@ -56,12 +65,20 @@ func (c CommentPost) addComments(ids ...msgId) error {
 	return nil
 }
 
+/*
+Простой конструктор
+*/
 func NewCommentPost(id msgId, allowComments bool) *CommentPost {
 	post := NewInitPost(id)
 	comments := make(map[msgId]IPost)
 	return &CommentPost{post, comments, allowComments}
 }
 
+/*
+Конструктор, принимающий пост и все дочерние элементы.
+Возвращает nil и ошибку, если что-либо не сходится
+Использовать только при загрузке из базы данных: прожорливый.
+*/
 func NewCommentPostWithComments(id msgId, allowComment bool, comments ...IPost) *CommentPost {
 	commentMap := make(map[msgId]IPost, len(comments))
 	commentIds := make([]msgId, len(comments))
