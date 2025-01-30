@@ -5,7 +5,7 @@ import (
 )
 
 type CommentPost struct {
-	post             IPost
+	post             IComment
 	comments         map[msgId]IComment
 	allowNewcomments bool
 }
@@ -22,7 +22,7 @@ func (c CommentPost) CanComment() bool {
 	return c.allowNewcomments
 }
 
-func (c CommentPost) getPost() IPost {
+func (c CommentPost) getPost() IComment {
 	return c.post
 }
 
@@ -45,7 +45,7 @@ func (c CommentPost) addComments(ids ...msgId) error {
 		str_id := fmt.Sprint(c.post.GetMessageId())
 		return fmt.Errorf("post doesn't allow to add commentaries%s", str_id)
 	}
-	c.post.AddCommentsId(ids...)
+	c.post.AddChildrenIds(ids...)
 	for _, id := range ids {
 		c.comments[id] = NewComment(id, c.post.GetMessageId())
 	}
@@ -53,7 +53,7 @@ func (c CommentPost) addComments(ids ...msgId) error {
 }
 
 func NewCommentPost(id msgId, allowComments bool) *CommentPost {
-	post := NewPost(id)
+	post := NewInitComment(id)
 	comments := make(map[msgId]IComment)
 	return &CommentPost{post, comments, allowComments}
 }
