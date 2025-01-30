@@ -14,19 +14,20 @@ type IHaveContent interface {
 }
 
 type IHaveComments interface {
-	GetCommentsId() ([]msgId, error)
-	AddCommentId(childId ...msgId) error
-	RemoveCommentId(id ...msgId) error
+	GetCommentsId() []msgId
+	AddCommentId(ids ...msgId)
+	RemoveCommentId(ids ...msgId)
 }
 
 type IHaveParent interface {
-	GetParentId() (msgId, error)
-	SetParentId(id msgId) error
+	GetParentId() msgId
+	SetParentId(id msgId)
 }
 
 type IHaveChildren interface {
-	GetChildrenId() (msgId, error)
-	SetChildrenId(id msgId) error
+	GetChildrenIds() []msgId
+	AddChildrenIds(ids ...msgId)
+	RemoveChildrenIds(ids ...msgId)
 }
 
 type IMessage interface {
@@ -40,6 +41,7 @@ type IPost interface {
 }
 
 type IComment interface {
+	IHaveMessageId
 	IHaveParent
 	IHaveChildren
 }
