@@ -35,12 +35,6 @@ func (c *Post) AddChildrenIds(ids ...msgId) {
 	}
 }
 
-func (c *Post) RemoveChildrenIds(ids ...msgId) {
-	for _, id := range ids {
-		delete(c.children, id)
-	}
-}
-
 func NewInitPost(id msgId) *Post {
 	return &Post{id, id, make(map[msgId]struct{})}
 }

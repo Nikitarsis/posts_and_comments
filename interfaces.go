@@ -31,7 +31,6 @@ type IHaveParent interface {
 type IHaveChildren interface {
 	GetChildrenIds() []msgId
 	AddChildrenIds(ids ...msgId)
-	RemoveChildrenIds(ids ...msgId)
 }
 
 // Сообщение с Id и содержанием
