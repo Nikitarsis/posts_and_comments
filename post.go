@@ -2,24 +2,24 @@ package comments_and_posts
 
 import "cmp"
 
-type Comment struct {
+type Post struct {
 	id       msgId
 	parent   msgId
 	children map[msgId]struct{}
 }
 
-func (c Comment) GetMessageId() msgId {
+func (c Post) GetMessageId() msgId {
 	return c.id
 }
-func (c Comment) GetParentId() (msgId, bool) {
+func (c Post) GetParentId() (msgId, bool) {
 	return c.parent, cmp.Compare(c.id, c.parent) == 0
 }
 
-func (c *Comment) SetParentId(id msgId) {
+func (c *Post) SetParentId(id msgId) {
 	c.parent = id
 }
 
-func (c Comment) GetChildrenIds() []msgId {
+func (c Post) GetChildrenIds() []msgId {
 	ret := make([]msgId, len(c.children))
 	i := 0
 	for k := range c.children {
@@ -29,30 +29,30 @@ func (c Comment) GetChildrenIds() []msgId {
 	return ret
 }
 
-func (c *Comment) AddChildrenIds(ids ...msgId) {
+func (c *Post) AddChildrenIds(ids ...msgId) {
 	for _, id := range ids {
 		c.children[id] = struct{}{}
 	}
 }
 
-func (c *Comment) RemoveChildrenIds(ids ...msgId) {
+func (c *Post) RemoveChildrenIds(ids ...msgId) {
 	for _, id := range ids {
 		delete(c.children, id)
 	}
 }
 
-func NewInitComment(id msgId) *Comment {
-	return &Comment{id, id, make(map[msgId]struct{})}
+func NewInitPost(id msgId) *Post {
+	return &Post{id, id, make(map[msgId]struct{})}
 }
 
-func NewComment(id msgId, parent msgId) *Comment {
-	return &Comment{id, parent, make(map[msgId]struct{})}
+func NewPost(id msgId, parent msgId) *Post {
+	return &Post{id, parent, make(map[msgId]struct{})}
 }
 
-func CommentWithChildren(id msgId, parent msgId, children ...msgId) *Comment {
+func NewPostWithChildren(id msgId, parent msgId, children ...msgId) *Post {
 	childrenMap := make(map[msgId]struct{}, len(children))
 	for _, child := range children {
 		childrenMap[child] = struct{}{}
 	}
-	return &Comment{id, parent, childrenMap}
+	return &Post{id, parent, childrenMap}
 }
