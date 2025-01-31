@@ -45,7 +45,6 @@ func (c *CommentPost) addCommentsToPost(ids ...msgId) {
 	for _, id := range ids {
 		c.comments[id] = NewPost(id, c.post.GetMessageId())
 	}
-	return nil
 }
 
 /*
