@@ -5,7 +5,9 @@ package comments_and_posts
 */
 
 // Обложка для ID
-type msgId uint64
+type msgId struct {
+	uint64
+}
 
 // Обложка для сообщения
 type content string

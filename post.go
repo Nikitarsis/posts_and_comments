@@ -1,6 +1,6 @@
 package comments_and_posts
 
-import "cmp"
+import "reflect"
 
 /*
 Простая реализация IPost, указывающая на зависимости между сообщениями
@@ -24,7 +24,7 @@ func (c Post) GetMessageId() msgId {
 Возвращает ID сообщения родителя и false, либо ID сообщения поста и true, если родителя нет
 */
 func (c Post) GetParentId() (msgId, bool) {
-	return c.parent, cmp.Compare(c.id, c.parent) == 0
+	return c.parent, reflect.DeepEqual(c.id, c.parent)
 }
 
 /*
