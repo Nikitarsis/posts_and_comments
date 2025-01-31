@@ -3,6 +3,8 @@ package comments_and_posts
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/Nikitarsis/posts_and_comments/messages"
 )
 
 /*
@@ -10,7 +12,7 @@ import (
 */
 type CommentPost struct {
 	post     IPost
-	comments map[msgId]IPost
+	comments map[messages.MsgId]IPost
 }
 
 /*
@@ -23,7 +25,7 @@ func (c CommentPost) getPost() IPost {
 /*
 Получает комментарии по ID, возвращает nil и ошибку, если ID комментария нет
 */
-func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
+func (c CommentPost) getComments(ids ...messages.MsgId) ([]IPost, error) {
 	ret := make([]IPost, len(ids))
 	for i, id := range ids {
 		comment, check := c.comments[id]
@@ -40,7 +42,7 @@ func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
 /*
 Добавляет комментарии непосредственно к посту
 */
-func (c *CommentPost) addCommentsToPost(ids ...msgId) {
+func (c *CommentPost) addCommentsToPost(ids ...messages.MsgId) {
 	c.post.AddChildrenIds(ids...)
 	for _, id := range ids {
 		c.comments[id] = NewPost(id, c.post.GetMessageId())
@@ -50,7 +52,7 @@ func (c *CommentPost) addCommentsToPost(ids ...msgId) {
 /*
 Добавляет побочные комментарии, возвращает ошибку, если не находится родительского комментария
 */
-func (c *CommentPost) addSubcomments(commentId msgId, ids ...msgId) error {
+func (c *CommentPost) addSubcomments(commentId messages.MsgId, ids ...messages.MsgId) error {
 	comment, check := c.comments[commentId]
 	if !check {
 		str_id := fmt.Sprint(c.post.GetMessageId())
@@ -64,9 +66,9 @@ func (c *CommentPost) addSubcomments(commentId msgId, ids ...msgId) error {
 /*
 Простой конструктор
 */
-func NewCommentPost(id msgId) *CommentPost {
+func NewCommentPost(id messages.MsgId) *CommentPost {
 	post := NewInitPost(id)
-	comments := make(map[msgId]IPost)
+	comments := make(map[messages.MsgId]IPost)
 	return &CommentPost{post, comments}
 }
 
@@ -78,7 +80,7 @@ func NewCommentPost(id msgId) *CommentPost {
 //TODO Если останется время, переделать ещё раз
 func NewCommentPostWithComments(post IPost, comments ...IPost) (*CommentPost, error) {
 	//Создание списка комментариев
-	comMap := make(map[msgId]IPost, len(comments))
+	comMap := make(map[messages.MsgId]IPost, len(comments))
 	for _, comment := range comments {
 		id := comment.GetMessageId()
 		comMap[id] = comment
