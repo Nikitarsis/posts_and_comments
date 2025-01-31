@@ -1,5 +1,8 @@
 package comments_and_posts
 
+import "github.com/Nikitarsis/posts_and_comments/messages"
+
 type PostHypervisor struct {
-	posts map[msgId]CommentPost
+	initPostList       map[messages.MsgId]CommentPost
+	associatedPostList map[messages.MsgId]messages.MsgId
 }

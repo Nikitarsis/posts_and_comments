@@ -1,6 +1,10 @@
 package comments_and_posts
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/Nikitarsis/posts_and_comments/messages"
+)
 
 /*
 Простая реализация IPost, указывающая на зависимости между сообщениями
@@ -8,30 +12,30 @@ import "reflect"
 принцип единой ответственности схема с ID
 */
 type Post struct {
-	id       msgId
-	parent   msgId //ID родителя, если указан id поста, родителя нет
-	children map[msgId]struct{}
+	id       messages.MsgId
+	parent   messages.MsgId //ID родителя, если указан id поста, родителя нет
+	children map[messages.MsgId]struct{}
 }
 
 /*
 Возвращает ID сообщения поста
 */
-func (c Post) GetMessageId() msgId {
+func (c Post) GetMessageId() messages.MsgId {
 	return c.id
 }
 
 /*
 Возвращает ID сообщения родителя и false, либо ID сообщения поста и true, если родителя нет
 */
-func (c Post) GetParentId() (msgId, bool) {
+func (c Post) GetParentId() (messages.MsgId, bool) {
 	return c.parent, reflect.DeepEqual(c.id, c.parent)
 }
 
 /*
 Получает дочерние ID
 */
-func (c Post) GetChildrenIds() []msgId {
-	ret := make([]msgId, len(c.children))
+func (c Post) GetChildrenIds() []messages.MsgId {
+	ret := make([]messages.MsgId, len(c.children))
 	i := 0
 	for k := range c.children {
 		ret[i] = k
@@ -43,7 +47,7 @@ func (c Post) GetChildrenIds() []msgId {
 /*
 Добавляет дочерние ID
 */
-func (c *Post) AddChildrenIds(ids ...msgId) {
+func (c *Post) AddChildrenIds(ids ...messages.MsgId) {
 	for _, id := range ids {
 		c.children[id] = struct{}{}
 	}
@@ -52,22 +56,22 @@ func (c *Post) AddChildrenIds(ids ...msgId) {
 /*
 Простейший конструктор начального поста без родителя
 */
-func NewInitPost(id msgId) *Post {
-	return &Post{id, id, make(map[msgId]struct{})}
+func NewInitPost(id messages.MsgId) *Post {
+	return &Post{id, id, make(map[messages.MsgId]struct{})}
 }
 
 /*
 Конструктор поста с родителем
 */
-func NewPost(id msgId, parent msgId) *Post {
-	return &Post{id, parent, make(map[msgId]struct{})}
+func NewPost(id messages.MsgId, parent messages.MsgId) *Post {
+	return &Post{id, parent, make(map[messages.MsgId]struct{})}
 }
 
 /*
 Конструктор поста с родителем и дочерними элементами
 */
-func NewPostWithChildren(id msgId, parent msgId, children ...msgId) *Post {
-	childrenMap := make(map[msgId]struct{}, len(children))
+func NewPostWithChildren(id messages.MsgId, parent messages.MsgId, children ...messages.MsgId) *Post {
+	childrenMap := make(map[messages.MsgId]struct{}, len(children))
 	for _, child := range children {
 		childrenMap[child] = struct{}{}
 	}

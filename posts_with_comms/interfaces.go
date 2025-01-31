@@ -1,13 +1,10 @@
 package comments_and_posts
 
+import "github.com/Nikitarsis/posts_and_comments/messages"
+
 /*
 Основные интерфейсы пакета
 */
-
-// Обложка для ID
-type msgId struct {
-	uint64
-}
 
 // Обложка для сообщения
 type content string
@@ -15,7 +12,7 @@ type content string
 // Структура имеет ID сообщения
 type IHaveMessageId interface {
 	//Возвращает свой ID
-	GetMessageId() msgId
+	GetMessageId() messages.MsgId
 }
 
 // Структура содержит содержание(текст, ссылки на прикреплёные файлы etc.)
@@ -29,15 +26,15 @@ type IHaveContent interface {
 // Структура может иметь родительский элемент(для комментариев-ответов)
 type IHaveParent interface {
 	//Возвращает ID родителя и false, либо другой ID(напр. собственный) и true, если родителя нет
-	GetParentId() (msgId, bool)
+	GetParentId() (messages.MsgId, bool)
 }
 
 // Структура может иметь дочерние элементы(для комментариев с ответами)
 type IHaveChildren interface {
 	//Возвращает ID дочерних собщений
-	GetChildrenIds() []msgId
+	GetChildrenIds() []messages.MsgId
 	//Добавляет дочерние сообщения
-	AddChildrenIds(ids ...msgId)
+	AddChildrenIds(ids ...messages.MsgId)
 }
 
 // Сообщение с Id и содержанием
