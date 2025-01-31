@@ -2,6 +2,7 @@ package comments_and_posts
 
 import (
 	"fmt"
+	"reflect"
 )
 
 /*
@@ -10,20 +11,6 @@ import (
 type CommentPost struct {
 	post     IPost
 	comments map[msgId]IPost
-	//TODO: Подумать над выделенеием в отдельную область
-	allowNewcomments bool
-}
-
-func (c *CommentPost) AllowComment() {
-	c.allowNewcomments = true
-}
-
-func (c *CommentPost) ForbidComment() {
-	c.allowNewcomments = false
-}
-
-func (c CommentPost) CanComment() bool {
-	return c.allowNewcomments
 }
 
 /*
@@ -51,13 +38,9 @@ func (c CommentPost) getComments(ids ...msgId) ([]IPost, error) {
 }
 
 /*
-Добавляет комментарии, возвращает ошибку, если комментировать нельзя
+Добавляет комментарии непосредственно к посту
 */
-func (c CommentPost) addComments(ids ...msgId) error {
-	if !c.CanComment() {
-		str_id := fmt.Sprint(c.post.GetMessageId())
-		return fmt.Errorf("post doesn't allow to add commentaries %s", str_id)
-	}
+func (c *CommentPost) addCommentsToPost(ids ...msgId) {
 	c.post.AddChildrenIds(ids...)
 	for _, id := range ids {
 		c.comments[id] = NewPost(id, c.post.GetMessageId())
@@ -66,27 +49,78 @@ func (c CommentPost) addComments(ids ...msgId) error {
 }
 
 /*
+Добавляет побочные комментарии, возвращает ошибку, если не находится родительского комментария
+*/
+func (c *CommentPost) addSubcomments(commentId msgId, ids ...msgId) error {
+	comment, check := c.comments[commentId]
+	if !check {
+		str_id := fmt.Sprint(c.post.GetMessageId())
+		str_cid := fmt.Sprint(commentId)
+		return fmt.Errorf("comment %s is not belong to post %s", str_cid, str_id)
+	}
+	comment.AddChildrenIds(ids...)
+	return nil
+}
+
+/*
 Простой конструктор
 */
-func NewCommentPost(id msgId, allowComments bool) *CommentPost {
+func NewCommentPost(id msgId) *CommentPost {
 	post := NewInitPost(id)
 	comments := make(map[msgId]IPost)
-	return &CommentPost{post, comments, allowComments}
+	return &CommentPost{post, comments}
 }
 
 /*
 Конструктор, принимающий пост и все дочерние элементы.
 Возвращает nil и ошибку, если что-либо не сходится
-Использовать только при загрузке из базы данных: прожорливый.
+Использовать только при загрузке из базы данных.
 */
-func NewCommentPostWithComments(id msgId, allowComment bool, comments ...IPost) *CommentPost {
-	commentMap := make(map[msgId]IPost, len(comments))
-	commentIds := make([]msgId, len(comments))
-	for i, comment := range comments {
-		cid := comment.GetMessageId()
-		commentMap[cid] = comment
-		commentIds[i] = cid
+//TODO Если останется время, переделать ещё раз
+func NewCommentPostWithComments(post IPost, comments ...IPost) (*CommentPost, error) {
+	//Создание списка комментариев
+	comMap := make(map[msgId]IPost, len(comments))
+	for _, comment := range comments {
+		id := comment.GetMessageId()
+		comMap[id] = comment
 	}
-	post := NewPostWithChildren(id, id, commentIds...)
-	return &CommentPost{post, commentMap, allowComment}
+	//Проверка поста на отсутствия родителей
+	if _, init := post.GetParentId(); !init {
+		str_id := fmt.Sprint(post.GetMessageId())
+		err := fmt.Errorf("post with id %s is not init", str_id)
+		return nil, err
+	}
+	//Проверка поста на то, имеются ли его дочерние элементы в comments
+	for _, childId := range post.GetChildrenIds() {
+		if _, check := comMap[childId]; !check {
+			str_pid := fmt.Sprint(post.GetMessageId())
+			str_cid := fmt.Sprint(post.GetMessageId())
+			return nil, fmt.Errorf("comment %s doesn't belong to post %s", str_cid, str_pid)
+		}
+	}
+	//Проверка всех комментариев на наличие в общем списке родителей и дочерних элементов
+	for _, comment := range comments {
+		parentId, _ := comment.GetParentId()
+		commentId := comment.GetMessageId()
+		//Если родителя нет в списке комментариев, проверяется основной пост, и в случае неудачи, возвращается ошибка.
+		if _, check := comMap[parentId]; !check {
+			if !reflect.DeepEqual(parentId, commentId) {
+				str_pid := fmt.Sprint(parentId)
+				str_cid := fmt.Sprint(commentId)
+				err := fmt.Errorf("comment %s has no place under post %s", str_cid, str_pid)
+				return nil, err
+			}
+		}
+		childrenIds := comment.GetChildrenIds()
+		//Проверка всех дочерних элементов на предмет наличия в мапе, если ID в мапе нет, возвращается ошибка
+		for _, childId := range childrenIds {
+			if _, check := comMap[childId]; !check {
+				str_chid := fmt.Sprint(childId)
+				str_cid := fmt.Sprint(commentId)
+				err := fmt.Errorf("Subcomment %s under comment %s has no place", str_chid, str_cid)
+				return nil, err
+			}
+		}
+	}
+	return &CommentPost{post, comMap}, nil
 }
