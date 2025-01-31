@@ -3,14 +3,14 @@ package messages
 // Обложка для сообщения
 type content string
 
-type msgId struct {
+type MsgId struct {
 	uint64
 }
 
 // Структура имеет ID сообщения
 type IHaveMessageId interface {
 	//Возвращает свой ID
-	GetMessageId() msgId
+	GetMessageId() MsgId
 }
 
 // Структура содержит содержание(текст, ссылки на прикреплёные файлы etc.)

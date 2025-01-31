@@ -1,4 +1,4 @@
-package comments_and_posts
+package messages
 
 // Тип сообщения
 type POST_TYPE string
@@ -13,14 +13,14 @@ const (
 Содержит уникальный идентифекатор и само содержание
 */
 type Message struct {
-	messageId      msgId
+	messageId      MsgId
 	contentMessage content
 }
 
 /*
 Возвращает ID сообщения
 */
-func (m Message) GetMessageId() msgId {
+func (m Message) GetMessageId() MsgId {
 	return m.messageId
 }
 
@@ -41,6 +41,6 @@ func (m *Message) SetContent(data content) {
 /*
 Простой конструктор
 */
-func NewMessage(id msgId, data content) *Message {
+func NewMessage(id MsgId, data content) *Message {
 	return &Message{id, data}
 }
