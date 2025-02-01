@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Nikitarsis/posts_and_comments/messages"
+	"../messages"
 )
 
 /*

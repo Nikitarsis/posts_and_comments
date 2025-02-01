@@ -1,6 +1,6 @@
 package comments_and_posts
 
-import "github.com/Nikitarsis/posts_and_comments/messages"
+import "../messages"
 
 type PostHypervisor struct {
 	initPostList       map[messages.MsgId]CommentPost
