@@ -24,8 +24,10 @@ func (c CommentDao) MarshalJSON() ([]byte, error) {
 	builder.WriteString(fmt.Sprintf("\"user_id\":\"%s\",", strconv.FormatUint(c.UserId, 16)))
 	builder.WriteString(fmt.Sprintf("\"post_id\":\"%s\",", strconv.FormatUint(c.PostId, 16)))
 	builder.WriteString(fmt.Sprintf("\"parent_id\":\"%s\",", strconv.FormatUint(c.ParentId, 16)))
-	builder.WriteString(fmt.Sprintf("\"children_ids\":[%s],", strings.Join(strChildren, ",")))
-	builder.WriteString(fmt.Sprintf("\"message\":\"%s\"", *c.Message))
+	builder.WriteString(fmt.Sprintf("\"children_ids\":[%s]", strings.Join(strChildren, ",")))
+	if c.Message != nil {
+		builder.WriteString(fmt.Sprintf(",\"message\":\"%s\"", *c.Message))
+	}
 	builder.WriteString("}")
 	return []byte(builder.String()), nil
 }
