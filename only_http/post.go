@@ -42,7 +42,7 @@ func post_get(
 	}
 	//Получение постов и комментов
 	postRaw, commentsRaw, test := getPost(postId, fromPos, toPos)
-	//Если пользователей нет, то возвращается 404
+	//Если поста нет, то возвращается 404
 	switch test {
 	case tdao.NO_SUCH_POST:
 		w.WriteHeader(http.StatusNotFound)
@@ -104,10 +104,15 @@ func post_post(
 		case tdao.NO_SUCH_USER:
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("no such user"))
+			return
+		case tdao.INCORRECT_USER:
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		default:
+			id_str := strconv.FormatUint(retId, 16)
+			w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
+			return
 		}
-		id_str := strconv.FormatUint(retId, 16)
-		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
-		return
 	}
 	//Парсит не пустое поле post_id
 	postId, errPost := strconv.ParseUint(post, 16, 64)
@@ -119,14 +124,21 @@ func post_post(
 	//Обновляет содержимое
 	problem := updatePost(postId, userId, &str)
 	switch problem {
+	case tdao.NO_SUCH_POST:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Post not found"))
+		return
 	case tdao.NO_SUCH_USER:
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("no such user"))
+		return
 	case tdao.INCORRECT_USER:
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Incorrect user"))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
 	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 // Удаление поста
@@ -151,7 +163,7 @@ func post_delete(
 		w.Write([]byte("unable to parse from hex post_id"))
 		return
 	}
-	//Удаляет
+	//Удаляет пост
 	ret := deletePost(postId, userId)
 	switch ret {
 	case tdao.INCORRECT_USER:
@@ -162,8 +174,13 @@ func post_delete(
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("No such user"))
 		return
+	case tdao.NO_SUCH_POST:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such post"))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
 	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 // Анализирует запросы к /Post
@@ -191,6 +208,8 @@ func Post(
 	case http.MethodDelete:
 		user := header.Get("user_id")
 		post_delete(w, deletePost, user, post)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
@@ -199,5 +218,73 @@ func PostMute(
 	r *http.Request,
 	mutePost func(post uint64, user uint64) tdao.PROBLEM,
 ) {
+	header := r.Header
+	userId, errUser := strconv.ParseUint(header.Get("user_id"), 16, 64)
+	if errUser != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to parse from hex user_id"))
+		return
+	}
+	postId, errPost := strconv.ParseUint(header.Get("post_id"), 16, 64)
+	if errPost != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to parse from hex post_id"))
+		return
+	}
+	problem := mutePost(postId, userId)
+	switch problem {
+	case tdao.INCORRECT_USER:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Incorrect user"))
+		return
+	case tdao.NO_SUCH_USER:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such user"))
+		return
+	case tdao.NO_SUCH_POST:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such post"))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+}
 
+func PostUnmute(
+	w http.ResponseWriter,
+	r *http.Request,
+	unmutePost func(post uint64, user uint64) tdao.PROBLEM,
+) {
+	header := r.Header
+	userId, errUser := strconv.ParseUint(header.Get("user_id"), 16, 64)
+	if errUser != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to parse from hex user_id"))
+		return
+	}
+	postId, errPost := strconv.ParseUint(header.Get("post_id"), 16, 64)
+	if errPost != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to parse from hex post_id"))
+		return
+	}
+	problem := unmutePost(postId, userId)
+	switch problem {
+	case tdao.INCORRECT_USER:
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Incorrect user"))
+		return
+	case tdao.NO_SUCH_USER:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such user"))
+		return
+	case tdao.NO_SUCH_POST:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such post"))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
 }
