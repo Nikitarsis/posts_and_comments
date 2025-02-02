@@ -99,7 +99,12 @@ func post_post(
 	str := string(bytes)
 	//Если поле post_id пустое, создаётся новый пост и возвращается его ID
 	if createNew {
-		retId, _ := createPost(userId, &str)
+		retId, problem := createPost(userId, &str)
+		switch problem {
+		case tdao.NO_SUCH_USER:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("no such user"))
+		}
 		id_str := strconv.FormatUint(retId, 16)
 		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
 		return
@@ -114,6 +119,9 @@ func post_post(
 	//Обновляет содержимое
 	problem := updatePost(postId, userId, &str)
 	switch problem {
+	case tdao.NO_SUCH_USER:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("no such user"))
 	case tdao.INCORRECT_USER:
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Incorrect user"))
@@ -149,6 +157,11 @@ func post_delete(
 	case tdao.INCORRECT_USER:
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Incorrect user"))
+		return
+	case tdao.NO_SUCH_USER:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("No such user"))
+		return
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -179,4 +192,12 @@ func Post(
 		user := header.Get("user_id")
 		post_delete(w, deletePost, user, post)
 	}
+}
+
+func PostMute(
+	w http.ResponseWriter,
+	r *http.Request,
+	mutePost func(post uint64, user uint64) tdao.PROBLEM,
+) {
+
 }
