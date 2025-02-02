@@ -52,7 +52,6 @@ func comment_post(
 	post string,
 	user string,
 ) {
-	bytes := make([]byte, 0)
 	//Проверяет, нужно ли создавать комментарий
 	createNew := comment == ""
 	//Парсит id пользователя
@@ -69,7 +68,7 @@ func comment_post(
 		return
 	}
 	//Читает тело комментария из поста
-	_, err := reader.Read(bytes)
+	bytes, err := io.ReadAll(reader)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("cannot read body"))
@@ -187,6 +186,7 @@ func Comment(
 		user := header.Get("user_id")
 		post := header.Get("post_id")
 		message := r.Body
+		defer message.Close()
 		comment_post(w, message, createComment, updateComment, comment, post, user)
 	case http.MethodDelete:
 		user := header.Get("user_id")

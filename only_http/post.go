@@ -53,13 +53,13 @@ func post_get(
 	post, errPost := json.Marshal(postRaw)
 	comments, errCom := json.Marshal(commentsRaw)
 	if errPost != nil {
-		log("post wasn't parsed")
+		log(fmt.Sprintf("post wasn't parsed: %s", errPost.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal error"))
 		return
 	}
 	if errCom != nil {
-		log("comment wasn't parsed")
+		log(fmt.Sprintf("comment wasn't parsed: %s", errCom.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal error"))
 		return
@@ -79,7 +79,6 @@ func post_post(
 	post string,
 	user string,
 ) {
-	bytes := make([]byte, 0)
 	//Проверяет, нужно ли создавать нужный пост
 	createNew := post == ""
 	//Парсит uid
@@ -90,10 +89,10 @@ func post_post(
 		return
 	}
 	//Читает из Body
-	_, err := reader.Read(bytes)
+	bytes, err := io.ReadAll(reader)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("cannot read body"))
+		w.Write([]byte("Cannot read body"))
 		return
 	}
 	str := string(bytes)
@@ -203,8 +202,9 @@ func Post(
 		post_get(w, getPost, log, post, from, to)
 	case http.MethodPost:
 		user := header.Get("user_id")
-		message := r.Body
-		post_post(w, message, createPost, updatePost, post, user)
+		reader := r.Body
+		defer reader.Close()
+		post_post(w, reader, createPost, updatePost, post, user)
 	case http.MethodDelete:
 		user := header.Get("user_id")
 		post_delete(w, deletePost, user, post)
