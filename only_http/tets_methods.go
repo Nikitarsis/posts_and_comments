@@ -33,18 +33,28 @@ func getTestPost() tdao.PostDao {
 	uid := uint64(111)
 	pid := uint64(111)
 	str := "test"
-	return tdao.PostDao{pid, uid, &str}
+	return tdao.PostDao{
+		PostId:  pid,
+		UserId:  uid,
+		Message: &str,
+	}
 }
 
 func getTestComment() []tdao.CommentDao {
 	ret := make([]tdao.CommentDao, 5)
-	for i, _ := range ret {
+	for i := range ret {
 		user := uint64(111 * i)
 		post := uint64(111 * i)
 		parent := uint64(111 * i)
 		children := make([]uint64, 5)
 		str := "test"
-		ret[i] = tdao.CommentDao{user, post, parent, children, &str}
+		ret[i] = tdao.CommentDao{
+			UserId:      user,
+			PostId:      post,
+			ParentId:    parent,
+			ChildrenIds: children,
+			Message:     &str,
+		}
 	}
 	return ret
 }
