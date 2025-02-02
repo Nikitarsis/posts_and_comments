@@ -79,10 +79,23 @@ func comment_post(
 	str := string(bytes)
 	//Если comment_id нулевой, пост добавляется
 	if createNew {
-		retId, _ := createComment(userId, postId, &str)
-		id_str := strconv.FormatUint(retId, 16)
-		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
-		return
+		retId, problem := createComment(userId, postId, &str)
+		switch problem {
+		case tdao.NO_SUCH_USER:
+			id_str := strconv.FormatUint(userId, 16)
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprint("User with id %s not found", id_str)))
+			return
+		case tdao.NO_SUCH_POST:
+			id_str := strconv.FormatUint(postId, 16)
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprint("Post with id %s not found", id_str)))
+			return
+		default:
+			id_str := strconv.FormatUint(retId, 16)
+			w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
+			return
+		}
 	}
 	//Парсит id комментария
 	commentId, errCom := strconv.ParseUint(comment, 16, 64)
@@ -103,8 +116,15 @@ func comment_post(
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(fmt.Sprint("Post with id %s not found", id_str)))
 		return
+	case tdao.NO_SUCH_USER:
+		id_str := strconv.FormatUint(commentId, 16)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(fmt.Sprint("No such user %s", id_str)))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
+		return
 	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 // Удаляет комментарий
@@ -138,10 +158,15 @@ func comment_delete(
 		w.Write([]byte(fmt.Sprint("Comment with id %s doesn't exist", id_str)))
 		return
 	case tdao.INCORRECT_USER:
+		id_str := strconv.FormatUint(commentId, 16)
+		w.WriteHeader(http.StatusNotFound)
 		w.WriteHeader(http.StatusNotAcceptable)
-		w.Write([]byte("Incorrect User"))
+		w.Write([]byte(fmt.Sprint("Incorrect user %s", id_str)))
+		return
+	default:
+		w.WriteHeader(http.StatusAccepted)
+		return
 	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 // Анализирует запросы к /Comment
@@ -167,5 +192,7 @@ func Comment(
 	case http.MethodDelete:
 		user := header.Get("user_id")
 		comment_delete(w, deleteComment, user, comment)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
