@@ -257,3 +257,52 @@ func TestCommentGet(t *testing.T) {
 		getComment,
 	)
 }
+
+func TestCommentPost(t *testing.T) {
+	rand.New(rand.NewSource(int64(12234)))
+	userId := rand.Uint64()
+	postId := rand.Uint64()
+	out := func(s []byte) {
+		fmt.Print(string(s))
+	}
+	counter := func(c int) {
+		if c/100 != 2 {
+			t.Error(c)
+		}
+	}
+	w := getTestHttpWriter(out, counter)
+	body := "Test string"
+	reader := getReadCloser(body)
+	createPost := func(user uint64, message *string) (uint64, tdao.PROBLEM) {
+		if user != userId {
+			t.Error()
+		}
+		if *message != body {
+			t.Error()
+		}
+		return rand.Uint64(), tdao.NO_PROBLEM
+	}
+	updatePost := func(post uint64, user uint64, message *string) tdao.PROBLEM {
+		if post != postId {
+			fmt.Printf("arg:%d\nneed:%d\n", post, postId)
+			t.Error()
+		}
+		if user != userId {
+			fmt.Printf("arg:%d\nneed:%d\n", user, userId)
+			t.Error()
+		}
+		if *message != body {
+			fmt.Printf("arg:%s\nneed:%s\n", *message, body)
+			t.Error()
+		}
+		return tdao.NO_PROBLEM
+	}
+	comment_post(
+		w,
+		reader,
+		createPost,
+		updatePost,
+		strconv.FormatUint(postId, 16),
+		strconv.FormatUint(userId, 16),
+	)
+}
