@@ -18,7 +18,7 @@ type ServerCallbacks struct {
 	//Функция, просматривающая посты
 	listPosts func() []tdao.PostDao
 	//Получает пост с комментариями и
-	getPost func(post uint64, fromId uint64, toId uint64) (tdao.PostDao, []tdao.CommentDao, bool)
+	getPost func(post uint64, fromId uint64, toId uint64) (tdao.PostDao, []tdao.CommentDao, tdao.PROBLEM)
 	//Загружает новый пост
 	createPost func(user uint64, message *string) (uint64, tdao.PROBLEM)
 	//Обновляет пост, если uid не совпадают, ошибка
@@ -67,10 +67,12 @@ func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from st
 		return
 	}
 	//Получение постов и комментов
-	postRaw, commentsRaw, check := s.getPost(postId, fromPos, toPos)
-	if !check {
+	postRaw, commentsRaw, test := s.getPost(postId, fromPos, toPos)
+	//Если пользователей нет, то возвращается 404
+	switch test {
+	case tdao.NO_SUCH_POST:
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(fmt.Sprintf("No such post %d", strconv.FormatUint(postId, 16))))
+		w.Write([]byte(fmt.Sprintf("No such post %s", postStr)))
 		return
 	}
 	post, errPost := json.Marshal(postRaw)
