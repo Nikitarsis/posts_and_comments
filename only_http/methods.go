@@ -46,6 +46,7 @@ func (s ServerCallbacks) Test(w http.ResponseWriter, r *http.Request) {
 }
 
 // Организует получение поста по Id
+// Соответствует методу GET /Post?post_id=$postStr$&from=$from$&to=$to$
 func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from string, to string) {
 	//В случае неудачного парсинга, возвращается ошибка
 	fromPos, errFrom := strconv.ParseUint(from, 10, 0)
@@ -75,6 +76,7 @@ func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from st
 		w.Write([]byte(fmt.Sprintf("No such post %s", postStr)))
 		return
 	}
+	//Маршализация ответа с ошибками
 	post, errPost := json.Marshal(postRaw)
 	comments, errCom := json.Marshal(commentsRaw)
 	if errPost != nil {
@@ -93,15 +95,21 @@ func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from st
 	w.Write([]byte(slices.Concat(post, []byte(","), comments)))
 }
 
+// Добавление поста
+// Соответствует методу POST /Post?user_id=$user$&post_id=$post$ и POST /Post?user_id=$user$
+// Возвращает ошибку, если user_id не соответствует user_id поста. Наивная реализация.
 func (s ServerCallbacks) post_post(w http.ResponseWriter, reader io.ReadCloser, post string, user string) {
 	bytes := make([]byte, 0)
+	//Проверяет, нужно ли создавать нужный пост
 	createNew := post == ""
+	//Парсит uid
 	userId, errUser := strconv.ParseUint(user, 16, 64)
 	if errUser != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("unable to parse from hex user_id"))
 		return
 	}
+	//Читает из Body
 	_, err := reader.Read(bytes)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -109,18 +117,21 @@ func (s ServerCallbacks) post_post(w http.ResponseWriter, reader io.ReadCloser, 
 		return
 	}
 	str := string(bytes)
+	//Если поле post_id пустое, создаётся новый пост и возвращается его ID
 	if createNew {
 		retId, _ := s.createPost(userId, &str)
 		id_str := strconv.FormatUint(retId, 16)
 		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
 		return
 	}
+	//Парсит не пустое поле post_id
 	postId, errPost := strconv.ParseUint(post, 16, 64)
 	if errPost != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("unable to parse from hex post_id"))
 		return
 	}
+	//Обновляет содержимое
 	problem := s.updatePost(postId, userId, &str)
 	switch problem {
 	case tdao.INCORRECT_USER:
@@ -130,7 +141,11 @@ func (s ServerCallbacks) post_post(w http.ResponseWriter, reader io.ReadCloser, 
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// Удаление поста
+// Соответствует методу DELETE /Post?user_id=$user$&post_id=$post$
+// Возвращает ошибку, если user_id не соответствует user_id поста. Наивная реализация.
 func (s ServerCallbacks) post_delete(w http.ResponseWriter, user string, post string) {
+	//Парсит user_id и post_id
 	userId, errUser := strconv.ParseUint(user, 16, 64)
 	if errUser != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -143,6 +158,7 @@ func (s ServerCallbacks) post_delete(w http.ResponseWriter, user string, post st
 		w.Write([]byte("unable to parse from hex post_id"))
 		return
 	}
+	//Удаляет
 	ret := s.deletePost(postId, userId)
 	switch ret {
 	case tdao.INCORRECT_USER:
@@ -152,6 +168,7 @@ func (s ServerCallbacks) post_delete(w http.ResponseWriter, user string, post st
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// Анализирует запросы к /Post
 func (s ServerCallbacks) Post(w http.ResponseWriter, r *http.Request) {
 	method := r.Method
 	header := r.Header
@@ -171,28 +188,31 @@ func (s ServerCallbacks) Post(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Организует получение комментария по Id
+// Соответствует методу GET /Comment?comment_id=$comment$
 func (s ServerCallbacks) comment_get(w http.ResponseWriter, comment string) {
+	//Парсинг CommentID
 	commentId, errCom := strconv.ParseUint(comment, 16, 64)
 	if errCom != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("unable to parse from hex comment_id"))
 		return
 	}
+	//Получение коммента
 	problem, result := s.getComment(commentId)
 	switch problem {
 	case tdao.NO_SUCH_POST:
 		w.WriteHeader(http.StatusNotFound)
 		return
-	case tdao.NO_PROBLEM:
-		message, err := json.Marshal(result)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		w.WriteHeader(http.StatusAccepted)
-		w.Write(message)
+	}
+	message, err := json.Marshal(result)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(message)
+	return
 }
 
 func (s ServerCallbacks) comment_post(w http.ResponseWriter, reader io.ReadCloser, comment string, user string) {
