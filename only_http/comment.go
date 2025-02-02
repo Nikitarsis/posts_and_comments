@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	tdao "../translationdao"
+	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
 )
 
 // Организует получение комментария по Id
@@ -38,7 +38,6 @@ func comment_get(
 	}
 	w.WriteHeader(http.StatusAccepted)
 	w.Write(message)
-	return
 }
 
 // Организует запись комментария по Id
@@ -84,16 +83,16 @@ func comment_post(
 		case tdao.NO_SUCH_USER:
 			id_str := strconv.FormatUint(userId, 16)
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprint("User with id %s not found", id_str)))
+			w.Write([]byte(fmt.Sprintf("User with id %s not found", id_str)))
 			return
 		case tdao.NO_SUCH_POST:
 			id_str := strconv.FormatUint(postId, 16)
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprint("Post with id %s not found", id_str)))
+			w.Write([]byte(fmt.Sprintf("Post with id %s not found", id_str)))
 			return
 		default:
 			id_str := strconv.FormatUint(retId, 16)
-			w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
+			w.Write([]byte(fmt.Sprintf("\"post_id\":\"%s\"", id_str)))
 			return
 		}
 	}
@@ -114,12 +113,12 @@ func comment_post(
 	case tdao.NO_SUCH_POST:
 		id_str := strconv.FormatUint(commentId, 16)
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(fmt.Sprint("Post with id %s not found", id_str)))
+		w.Write([]byte(fmt.Sprintf("Post with id %s not found", id_str)))
 		return
 	case tdao.NO_SUCH_USER:
 		id_str := strconv.FormatUint(commentId, 16)
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(fmt.Sprint("No such user %s", id_str)))
+		w.Write([]byte(fmt.Sprintf("No such user %s", id_str)))
 		return
 	default:
 		w.WriteHeader(http.StatusAccepted)
@@ -155,13 +154,13 @@ func comment_delete(
 	case tdao.NO_SUCH_POST:
 		id_str := strconv.FormatUint(commentId, 16)
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(fmt.Sprint("Comment with id %s doesn't exist", id_str)))
+		w.Write([]byte(fmt.Sprintf("Comment with id %s doesn't exist", id_str)))
 		return
 	case tdao.INCORRECT_USER:
 		id_str := strconv.FormatUint(commentId, 16)
 		w.WriteHeader(http.StatusNotFound)
 		w.WriteHeader(http.StatusNotAcceptable)
-		w.Write([]byte(fmt.Sprint("Incorrect user %s", id_str)))
+		w.Write([]byte(fmt.Sprintf("Incorrect user %s", id_str)))
 		return
 	default:
 		w.WriteHeader(http.StatusAccepted)

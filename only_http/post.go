@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strconv"
 
-	tdao "../translationdao"
+	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
 )
 
 // Организует получение поста по Id
@@ -110,7 +110,7 @@ func post_post(
 			return
 		default:
 			id_str := strconv.FormatUint(retId, 16)
-			w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
+			w.Write([]byte(fmt.Sprintf("\"post_id\":\"%s\"", id_str)))
 			return
 		}
 	}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	tdao "../translationdao"
+	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
 )
 
 func Posts(

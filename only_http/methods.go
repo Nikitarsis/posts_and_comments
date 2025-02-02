@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	tdao "../translationdao"
+	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
 )
 
 type PostsCallback struct {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	tdao "../translationdao"
+	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
 )
 
 type TestResponse struct {
