@@ -3,7 +3,7 @@ package comments_and_posts
 import (
 	"reflect"
 
-	"../messages"
+	"github.com/Nikitarsis/posts_and_comments/messages"
 )
 
 /*

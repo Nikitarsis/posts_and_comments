@@ -1,6 +1,6 @@
 package comments_and_posts
 
-import "../messages"
+import "github.com/Nikitarsis/posts_and_comments/messages"
 
 /*
 Основные интерфейсы пакета
