@@ -13,27 +13,41 @@ import (
 
 // Структура, содержащая колбеки
 type ServerCallbacks struct {
-	warn          func(string)
-	log           func(string)
-	listPosts     func() []tdao.PostDao
-	getPost       func(post uint64, fromId uint64, toId uint64) (tdao.PostDao, []tdao.CommentDao, bool)
-	postPost      func(user uint64, message *string) (uint64, tdao.PROBLEM)
-	updatePost    func(post uint64, user uint64, message *string) tdao.PROBLEM
-	deletePost    func(post uint64, user uint64) tdao.PROBLEM
-	mutePost      func(post uint64, user uint64) tdao.PROBLEM
-	unmutePost    func(post uint64, user uint64) tdao.PROBLEM
-	getComment    func(comment uint64) (tdao.PROBLEM, *tdao.CommentDao)
-	postComment   func(user uint64, message *string) (uint64, tdao.PROBLEM)
+	//Логгер
+	log func(string)
+	//Функция, просматривающая посты
+	listPosts func() []tdao.PostDao
+	//Получает пост с комментариями и
+	getPost func(post uint64, fromId uint64, toId uint64) (tdao.PostDao, []tdao.CommentDao, bool)
+	//Загружает новый пост
+	createPost func(user uint64, message *string) (uint64, tdao.PROBLEM)
+	//Обновляет пост, если uid не совпадают, ошибка
+	updatePost func(post uint64, user uint64, message *string) tdao.PROBLEM
+	//Удаляет пост, если uid не совпадают, ошибка
+	deletePost func(post uint64, user uint64) tdao.PROBLEM
+	//Запрещает добавлять комментарии
+	mutePost func(post uint64, user uint64) tdao.PROBLEM
+	//Разрешает добавлять комментарии
+	unmutePost func(post uint64, user uint64) tdao.PROBLEM
+	//Получает комментарий
+	getComment func(comment uint64) (tdao.PROBLEM, *tdao.CommentDao)
+	//Загружает новый комментарий
+	createComment func(user uint64, message *string) (uint64, tdao.PROBLEM)
+	//Обновляет комментарий, если uid не совпадают, ошибка
 	updateComment func(comment uint64, user uint64, message *string) tdao.PROBLEM
+	//Удаляет комментарий, если uid не совпадают, ошибка
 	deleteComment func(comment uint64, user uint64) tdao.PROBLEM
 }
 
+// Тестовый метод
 func (s ServerCallbacks) Test(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTeapot)
 	fmt.Fprintf(w, "Hiiiiiii :3")
 }
 
+// Организует получение поста по Id
 func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from string, to string) {
+	//В случае неудачного парсинга, возвращается ошибка
 	fromPos, errFrom := strconv.ParseUint(from, 10, 0)
 	toPos, errTo := strconv.ParseUint(to, 10, 0)
 	postId, errPost := strconv.ParseUint(postStr, 16, 64)
@@ -52,6 +66,7 @@ func (s ServerCallbacks) post_get(w http.ResponseWriter, postStr string, from st
 		w.Write([]byte("unable to parse from dec to="))
 		return
 	}
+	//Получение постов и комментов
 	postRaw, commentsRaw, check := s.getPost(postId, fromPos, toPos)
 	if !check {
 		w.WriteHeader(http.StatusNotFound)
@@ -93,7 +108,7 @@ func (s ServerCallbacks) post_post(w http.ResponseWriter, reader io.ReadCloser, 
 	}
 	str := string(bytes)
 	if createNew {
-		retId, _ := s.postPost(userId, &str)
+		retId, _ := s.createPost(userId, &str)
 		id_str := strconv.FormatUint(retId, 16)
 		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
 		return
@@ -195,7 +210,7 @@ func (s ServerCallbacks) comment_post(w http.ResponseWriter, reader io.ReadClose
 	}
 	str := string(bytes)
 	if createNew {
-		retId, _ := s.postPost(userId, &str)
+		retId, _ := s.createPost(userId, &str)
 		id_str := strconv.FormatUint(retId, 16)
 		w.Write([]byte(fmt.Sprint("\"post_id\":\"%s\"", id_str)))
 		return
