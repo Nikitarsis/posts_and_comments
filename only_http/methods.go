@@ -92,3 +92,19 @@ func (s ServerCallbacks) Posts(w http.ResponseWriter, r *http.Request) {
 		s.Posts_.listPosts,
 	)
 }
+
+func (s ServerCallbacks) PostMute(w http.ResponseWriter, r *http.Request) {
+	PostMute(
+		w,
+		r,
+		s.Post_mute_.mutePost,
+	)
+}
+
+func (s ServerCallbacks) PostUnmute(w http.ResponseWriter, r *http.Request) {
+	PostUnmute(
+		w,
+		r,
+		s.Post_unmute_.unmutePost,
+	)
+}
