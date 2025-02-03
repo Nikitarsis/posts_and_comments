@@ -223,22 +223,27 @@ func deleteComment(comment uint64, user uint64) tdao.PROBLEM {
 }
 
 func main() {
-	posts := onlyhttp.PostsCallback{
+	posts = cap.NewPostHypervisor()
+	authors = users.NewAuthorManager()
+	mutedPosts = mtd.NewMutedPost()
+	contentManager = messages.NewMesssagesController()
+
+	postsCallbacks := onlyhttp.PostsCallback{
 		ListPosts: listPosts,
 	}
-	mute := onlyhttp.MutePostCallback{
+	muteCallbacks := onlyhttp.MutePostCallback{
 		MutePost: mutePost,
 	}
-	unmute := onlyhttp.UnmutePostCallback{
+	unmuteCallbacks := onlyhttp.UnmutePostCallback{
 		UnmutePost: unmutePost,
 	}
-	post := onlyhttp.PostCallback{
+	postCallbacks := onlyhttp.PostCallback{
 		GetPost:    getPost,
 		CreatePost: createPost,
 		UpdatePost: updatePost,
 		DeletePost: deletePost,
 	}
-	comment := onlyhttp.CommentCallback{
+	commentCallbacks := onlyhttp.CommentCallback{
 		GetComment:    getComment,
 		CreateComment: createComment,
 		UpdateComment: updateComment,
@@ -247,11 +252,11 @@ func main() {
 
 	serverCalls := onlyhttp.ServerCallbacks{
 		Log:          func(s string) {},
-		Posts_:       posts,
-		Post_:        post,
-		Post_mute_:   mute,
-		Post_unmute_: unmute,
-		Comment_:     comment,
+		Posts_:       postsCallbacks,
+		Post_:        postCallbacks,
+		Post_mute_:   muteCallbacks,
+		Post_unmute_: unmuteCallbacks,
+		Comment_:     commentCallbacks,
 	}
 	onlyhttp.StartServer(serverCalls)
 }
