@@ -12,3 +12,7 @@ func (m MessagesController) GetContent(id MsgId) *string {
 	}
 	return ret
 }
+
+func (m *MessagesController) SetContent(id MsgId, message *string) {
+	m.content[id] = message
+}
