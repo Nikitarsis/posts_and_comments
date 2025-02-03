@@ -23,14 +23,14 @@ type CommentPost struct {
 /*
 Возвращает сам пост
 */
-func (c CommentPost) getPost() IPost {
+func (c CommentPost) GetPost() IPost {
 	return c.post
 }
 
 /*
 Получает комментарии по ID, возвращает nil и ошибку, если ID комментария нет
 */
-func (c CommentPost) getComments(ids ...messages.MsgId) ([]IPost, error) {
+func (c CommentPost) GetComments(ids ...messages.MsgId) ([]IPost, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	ret := make([]IPost, len(ids))
@@ -46,7 +46,7 @@ func (c CommentPost) getComments(ids ...messages.MsgId) ([]IPost, error) {
 	return ret, nil
 }
 
-func (c CommentPost) getCommentPage(from int, to int) ([]messages.MsgId, error) {
+func (c CommentPost) GetCommentPage(from int, to int) ([]IPost, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if from < 0 {
@@ -55,13 +55,18 @@ func (c CommentPost) getCommentPage(from int, to int) ([]messages.MsgId, error) 
 	if to >= len(c.commentPages) {
 		return nil, errors.New("too big")
 	}
-	return c.commentPages[from:to], nil
+	ids := c.commentPages[from:to]
+	ret := make([]IPost, len(ids))
+	for i, id := range ids {
+		ret[i] = c.comments[id]
+	}
+	return ret, nil
 }
 
 /*
 Добавляет комментарии непосредственно к посту
 */
-func (c *CommentPost) addCommentsToPost(ids ...messages.MsgId) {
+func (c *CommentPost) AddCommentsToPost(ids ...messages.MsgId) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.post.AddChildrenIds(ids...)
@@ -77,7 +82,7 @@ func (c *CommentPost) addCommentsToPost(ids ...messages.MsgId) {
 /*
 Добавляет побочные комментарии, возвращает ошибку, если не находится родительского комментария
 */
-func (c *CommentPost) addSubcomments(commentId messages.MsgId, ids ...messages.MsgId) error {
+func (c *CommentPost) AddSubcomments(commentId messages.MsgId, ids ...messages.MsgId) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	comment, check := c.comments[commentId]
