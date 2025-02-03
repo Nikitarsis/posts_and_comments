@@ -1,5 +1,9 @@
 package muted_posts
 
+import (
+	msg "github.com/Nikitarsis/posts_and_comments/messages"
+)
+
 type MutedPost struct {
 	mutedPost map[msg.MsgId]struct{}
 }
@@ -10,7 +14,7 @@ func (m MutedPost) CanComment(id msg.MsgId) bool {
 }
 
 func (m *MutedPost) AllowComment(id msg.MsgId) {
-	m.mutedPost[id] = struct{}
+	m.mutedPost[id] = struct{}{}
 }
 
 func (m *MutedPost) ForbidComment(id msg.MsgId) {
