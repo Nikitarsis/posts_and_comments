@@ -262,6 +262,7 @@ func TestCommentPost(t *testing.T) {
 	rand.New(rand.NewSource(int64(12234)))
 	userId := rand.Uint64()
 	postId := rand.Uint64()
+	commentId := rand.Uint64()
 	out := func(s []byte) {
 		fmt.Print(string(s))
 	}
@@ -273,8 +274,11 @@ func TestCommentPost(t *testing.T) {
 	w := getTestHttpWriter(out, counter)
 	body := "Test string"
 	reader := getReadCloser(body)
-	createPost := func(user uint64, message *string) (uint64, tdao.PROBLEM) {
+	createComment := func(user uint64, parent uint64, message *string) (uint64, tdao.PROBLEM) {
 		if user != userId {
+			t.Error()
+		}
+		if parent != postId {
 			t.Error()
 		}
 		if *message != body {
@@ -282,9 +286,9 @@ func TestCommentPost(t *testing.T) {
 		}
 		return rand.Uint64(), tdao.NO_PROBLEM
 	}
-	updatePost := func(post uint64, user uint64, message *string) tdao.PROBLEM {
-		if post != postId {
-			fmt.Printf("arg:%d\nneed:%d\n", post, postId)
+	updateComment := func(comment uint64, user uint64, message *string) tdao.PROBLEM {
+		if comment != commentId {
+			fmt.Printf("arg:%d\nneed:%d\n", comment, postId)
 			t.Error()
 		}
 		if user != userId {
@@ -300,9 +304,75 @@ func TestCommentPost(t *testing.T) {
 	comment_post(
 		w,
 		reader,
-		createPost,
-		updatePost,
+		createComment,
+		updateComment,
+		strconv.FormatUint(commentId, 16),
 		strconv.FormatUint(postId, 16),
 		strconv.FormatUint(userId, 16),
 	)
+}
+
+func TestCommentDelete(t *testing.T) {
+	rand.New(rand.NewSource(int64(12234)))
+	userId := rand.Uint64()
+	commentId := rand.Uint64()
+	out := func(s []byte) {
+		fmt.Print(string(s))
+	}
+	counter := func(c int) {
+		if c/100 != 2 {
+			t.Error(c)
+		}
+	}
+	w := getTestHttpWriter(out, counter)
+	deleteComment := func(comment uint64, user uint64) tdao.PROBLEM {
+		if comment != commentId {
+			t.Error()
+		}
+		if user != userId {
+			t.Error()
+		}
+		return tdao.NO_PROBLEM
+	}
+	comment_delete(
+		w,
+		deleteComment,
+		strconv.FormatUint(userId, 16),
+		strconv.FormatUint(commentId, 16),
+	)
+}
+
+func TestMuteUnmute(t *testing.T) {
+	rand.New(rand.NewSource(int64(12234)))
+	testStr := "Test string"
+	userId := rand.Uint64()
+	postId := rand.Uint64()
+	out := func(s []byte) {
+		fmt.Print(string(s))
+	}
+	counter := func(c int) {
+		if c/100 != 2 {
+			t.Error(c)
+		}
+	}
+	w := getTestHttpWriter(out, counter)
+	requset, _ := http.NewRequest(
+		http.MethodGet,
+		"post/mute",
+		getTestReaderCloser(testStr),
+	)
+	requset.Header.Add("user_id", strconv.FormatUint(userId, 16))
+	requset.Header.Add("post_id", strconv.FormatUint(postId, 16))
+	mute := func(post uint64, user uint64) tdao.PROBLEM {
+		if post != postId {
+			t.Error()
+		}
+		if user != userId {
+			t.Error()
+		}
+		return tdao.NO_PROBLEM
+	}
+	unmute := mute
+	PostMute(w, requset, mute)
+	PostUnmute(w, requset, unmute)
 }
