@@ -1,10 +1,14 @@
 package messages
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 var hasTimer bool
 var lastTime uint64
 var counter uint16
+var mutex *sync.Mutex
 
 type MsgId struct {
 	uint64
@@ -27,6 +31,8 @@ func GetNewMessageId() MsgId {
 	ret := sec << 22
 	var max uint64 = 1 << 63
 	ret = ret &^ max
+	mutex.Lock()
+	defer mutex.Unlock()
 	ret = ret | uint64(counter)
 	if !hasTimer {
 		lastTime = sec
