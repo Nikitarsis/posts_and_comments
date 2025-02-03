@@ -7,3 +7,13 @@ type CommentDao struct {
 	ChildrenIds []uint64 `json:"children_id"`
 	Message     *string  `json:"message,omitempty"`
 }
+
+func GetEmptyCommentDao() CommentDao {
+	return CommentDao{
+		UserId:      0,
+		PostId:      0,
+		ParentId:    0,
+		ChildrenIds: make([]uint64, 0),
+		Message:     nil,
+	}
+}
