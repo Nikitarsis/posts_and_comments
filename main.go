@@ -6,23 +6,15 @@ import (
 	onlyhttp "github.com/Nikitarsis/posts_and_comments/only_http"
 	cap "github.com/Nikitarsis/posts_and_comments/posts_with_comms"
 	tdao "github.com/Nikitarsis/posts_and_comments/translationdao"
-	usr "github.com/Nikitarsis/posts_and_comments/users"
+	"github.com/Nikitarsis/posts_and_comments/users"
 )
 
 var posts cap.PostHypervisor
-var authors usr.AuthorManager
+var authors users.AuthorManager
 var mutedPosts mtd.MutedPost
 var contentManager messages.MessagesController
 
-func daoFromIPost(post cap.IPost, userId usr.IUser) tdao.PostDao {
-	return tdao.PostDao{
-		PostId:  post.GetMessageId().GetId(),
-		UserId:  userId.GetId(),
-		Message: nil,
-	}
-}
-
-func daoFromIPostWithMessage(post cap.IPost, userId usr.IUser, message *string) tdao.PostDao {
+func daoFromIPostWithMessage(post cap.IPost, userId users.IUser, message *string) tdao.PostDao {
 	return tdao.PostDao{
 		PostId:  post.GetMessageId().GetId(),
 		UserId:  userId.GetId(),
@@ -30,7 +22,7 @@ func daoFromIPostWithMessage(post cap.IPost, userId usr.IUser, message *string) 
 	}
 }
 
-func daoComment(comment cap.IPost, userId usr.IUser) tdao.CommentDao {
+func daoComment(comment cap.IPost, userId users.IUser) tdao.CommentDao {
 	post := comment.GetMessageId()
 	parent, _ := comment.GetParentId()
 	children := comment.GetChildrenIds()
@@ -47,12 +39,9 @@ func daoComment(comment cap.IPost, userId usr.IUser) tdao.CommentDao {
 	}
 }
 
-func daoCommentWithMessage(comment cap.IPost, userId usr.IUser, message *string) tdao.CommentDao {
+func daoCommentWithMessage(comment cap.IPost, userId users.IUser, message *string) tdao.CommentDao {
 	post := comment.GetMessageId()
-	parent, check := comment.GetParentId()
-	if !check {
-
-	}
+	parent, _ := comment.GetParentId()
 	children := comment.GetChildrenIds()
 	retChildren := make([]uint64, len(children))
 	for _, child := range children {
@@ -73,7 +62,7 @@ func listPosts() []tdao.PostDao {
 	for i, pst := range postSlice {
 		author, check := authors.GetAuthorOfPost(pst)
 		if !check {
-			author = usr.GetNullUsr()
+			author = users.GetNullUsr()
 		}
 		dao[i] = tdao.PostDao{
 			PostId:  pst.GetId(),
@@ -86,7 +75,7 @@ func listPosts() []tdao.PostDao {
 
 func mutePost(postId uint64, userId uint64) tdao.PROBLEM {
 	post := messages.GetMessageId(postId)
-	user := usr.GetUser(userId)
+	user := users.GetUser(userId)
 	if !authors.CheckAuthor(user) {
 		return tdao.NO_SUCH_USER
 	}
@@ -103,7 +92,7 @@ func mutePost(postId uint64, userId uint64) tdao.PROBLEM {
 
 func unmutePost(postId uint64, userId uint64) tdao.PROBLEM {
 	post := messages.GetMessageId(postId)
-	user := usr.GetUser(userId)
+	user := users.GetUser(userId)
 	if !authors.CheckAuthor(user) {
 		return tdao.NO_SUCH_USER
 	}
@@ -153,7 +142,7 @@ func createPost(user uint64, message *string) (uint64, tdao.PROBLEM) {
 
 func updatePost(post uint64, user uint64, message *string) tdao.PROBLEM {
 	postId := messages.GetMessageId(post)
-	userId := usr.GetUser(user)
+	userId := users.GetUser(user)
 	if !posts.HasPost(postId) {
 		return tdao.NO_SUCH_POST
 	}
@@ -162,6 +151,74 @@ func updatePost(post uint64, user uint64, message *string) tdao.PROBLEM {
 		return tdao.NO_SUCH_USER
 	}
 	contentManager.SetContent(postId, message)
+	return tdao.NO_PROBLEM
+}
+
+func deletePost(post uint64, user uint64) tdao.PROBLEM {
+	userId := users.GetUser(user)
+	postId := messages.GetMessageId(post)
+	author, check := authors.GetAuthorOfPost(postId)
+	if !check {
+		return tdao.INCORRECT_USER
+	}
+	if author != userId {
+		return tdao.INCORRECT_USER
+	}
+
+	posts.DeletePost(postId)
+	contentManager.DeleteContent(postId)
+	return tdao.NO_PROBLEM
+}
+
+func getComment(comment uint64) (tdao.PROBLEM, *tdao.CommentDao) {
+	commentId := messages.GetMessageId(comment)
+	userId, hasAuthor := authors.GetAuthorOfPost(commentId)
+	if !hasAuthor {
+		userId = users.GetNullUsr()
+	}
+	com, check := posts.GetComment(commentId)
+	if !check {
+		return tdao.NO_SUCH_POST, nil
+	}
+	message := contentManager.GetContent(commentId)
+	ret := daoCommentWithMessage(com, userId, message)
+	return tdao.NO_PROBLEM, &ret
+}
+
+func createComment(user uint64, parent uint64, message *string) (uint64, tdao.PROBLEM) {
+	postId := messages.GetNewMessageId()
+	parentId := messages.GetMessageId(parent)
+	posts.NewComment(parentId, postId)
+	contentManager.SetContent(postId, message)
+	return postId.GetId(), tdao.NO_PROBLEM
+}
+
+func updateComment(comment uint64, user uint64, message *string) tdao.PROBLEM {
+	commentId := messages.GetMessageId(comment)
+	userId := users.GetUser(user)
+	if !posts.HasPost(commentId) {
+		return tdao.NO_SUCH_POST
+	}
+	author, _ := authors.GetAuthorOfPost(commentId)
+	if author != userId {
+		return tdao.NO_SUCH_USER
+	}
+	contentManager.SetContent(commentId, message)
+	return tdao.NO_PROBLEM
+}
+
+func deleteComment(comment uint64, user uint64) tdao.PROBLEM {
+	userId := users.GetUser(user)
+	commentId := messages.GetMessageId(comment)
+	author, check := authors.GetAuthorOfPost(commentId)
+	if !check {
+		return tdao.INCORRECT_USER
+	}
+	if author != userId {
+		return tdao.INCORRECT_USER
+	}
+
+	contentManager.DeleteContent(commentId)
 	return tdao.NO_PROBLEM
 }
 
@@ -179,8 +236,14 @@ func main() {
 		GetPost:    getPost,
 		CreatePost: createPost,
 		UpdatePost: updatePost,
+		DeletePost: deletePost,
 	}
-	comment := onlyhttp.CommentCallback{}
+	comment := onlyhttp.CommentCallback{
+		GetComment:    getComment,
+		CreateComment: createComment,
+		UpdateComment: updateComment,
+		DeleteComment: deleteComment,
+	}
 
 	serverCalls := onlyhttp.ServerCallbacks{
 		Log:          func(s string) {},
