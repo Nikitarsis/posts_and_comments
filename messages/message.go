@@ -14,7 +14,7 @@ const (
 */
 type Message struct {
 	messageId      MsgId
-	contentMessage content
+	contentMessage string
 }
 
 /*
@@ -27,20 +27,20 @@ func (m Message) GetMessageId() MsgId {
 /*
 Получает содержание сообщения
 */
-func (m Message) GetContent() content {
+func (m Message) GetContent() string {
 	return m.contentMessage
 }
 
 /*
 Обновляет содержание сообщения
 */
-func (m *Message) SetContent(data content) {
+func (m *Message) SetContent(data string) {
 	m.contentMessage = data
 }
 
 /*
 Простой конструктор
 */
-func NewMessage(id MsgId, data content) *Message {
+func NewMessage(id MsgId, data string) *Message {
 	return &Message{id, data}
 }
