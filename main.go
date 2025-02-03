@@ -32,10 +32,7 @@ func daoFromIPostWithMessage(post cap.IPost, userId usr.IUser, message *string) 
 
 func daoComment(comment cap.IPost, userId usr.IUser) tdao.CommentDao {
 	post := comment.GetMessageId()
-	parent, check := comment.GetParentId()
-	if !check {
-
-	}
+	parent, _ := comment.GetParentId()
 	children := comment.GetChildrenIds()
 	retChildren := make([]uint64, len(children))
 	for _, child := range children {
@@ -148,6 +145,26 @@ func getPost(post uint64, fromId uint64, toId uint64) (tdao.PostDao, []tdao.Comm
 	return retPost, retCom, tdao.NO_PROBLEM
 }
 
+func createPost(user uint64, message *string) (uint64, tdao.PROBLEM) {
+	postId := messages.GetNewMessageId()
+	posts.NewPost(postId)
+	return postId.GetId(), tdao.NO_PROBLEM
+}
+
+func updatePost(post uint64, user uint64, message *string) tdao.PROBLEM {
+	postId := messages.GetMessageId(post)
+	userId := usr.GetUser(user)
+	if !posts.HasPost(postId) {
+		return tdao.NO_SUCH_POST
+	}
+	author, _ := authors.GetAuthorOfPost(postId)
+	if author != userId {
+		return tdao.NO_SUCH_USER
+	}
+	contentManager.SetContent(postId, message)
+	return tdao.NO_PROBLEM
+}
+
 func main() {
 	posts := onlyhttp.PostsCallback{
 		ListPosts: listPosts,
@@ -159,7 +176,9 @@ func main() {
 		UnmutePost: unmutePost,
 	}
 	post := onlyhttp.PostCallback{
-		GetPost: getPost,
+		GetPost:    getPost,
+		CreatePost: createPost,
+		UpdatePost: updatePost,
 	}
 	comment := onlyhttp.CommentCallback{}
 
