@@ -20,3 +20,9 @@ func (m *MessagesController) SetContent(id MsgId, message *string) {
 func (m *MessagesController) DeleteContent(id MsgId) {
 	delete(m.content, id)
 }
+
+func NewMesssagesController() MessagesController {
+	return MessagesController{
+		content: make(map[MsgId]*string),
+	}
+}

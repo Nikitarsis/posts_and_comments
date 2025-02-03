@@ -20,3 +20,9 @@ func (m *MutedPost) AllowComment(id msg.MsgId) {
 func (m *MutedPost) ForbidComment(id msg.MsgId) {
 	delete(m.mutedPost, id)
 }
+
+func NewMutedPost() MutedPost {
+	return MutedPost{
+		mutedPost: make(map[msg.MsgId]struct{}),
+	}
+}
