@@ -18,3 +18,10 @@ func (a AuthorManager) CheckAuthor(id UserId) bool {
 	_, ret := a.authors[id]
 	return ret
 }
+
+func NewAuthorManager() AuthorManager {
+	return AuthorManager{
+		authors:        make(map[UserId]struct{}),
+		authorsOfPosts: make(map[messages.MsgId]UserId),
+	}
+}
