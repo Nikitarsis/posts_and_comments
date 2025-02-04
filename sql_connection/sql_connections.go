@@ -21,10 +21,7 @@ type ConnectionSQL struct {
 }
 
 func GetObject[T any](csql ConnectionSQL, command string, conversion func(*sql.Rows) T) T {
-	ret, err := csql.getRows(command)
-	if err != nil {
-		return nil
-	}
+	ret, _ := csql.getRows(command)
 	return conversion((ret))
 }
 
@@ -39,7 +36,7 @@ func (c ConnectionSQL) HasTable(str string) bool {
 
 func (c *ConnectionSQL) AddTable(tableName string, tableDescription string) {
 	c.tables[tableName] = struct{}{}
-	c.exec(fmt.Sprintf("CREATE TABLE %s", tableDescription))
+	c.exec(fmt.Sprintf("CREATE TABLE %s %s", tableName, tableDescription))
 }
 
 func CreateConnection(dbname string) (*ConnectionSQL, error) {
@@ -53,6 +50,7 @@ func CreateConnection(dbname string) (*ConnectionSQL, error) {
 	}
 	exec := func(str string) error {
 		go database.Exec(str)
+		return nil
 	}
 	rows, errTable := database.Query("SELECT * FROM pg_catalog.pg_tables")
 	if errTable != nil {
@@ -69,9 +67,8 @@ func CreateConnection(dbname string) (*ConnectionSQL, error) {
 		tableNames[str] = struct{}{}
 	}
 	return &ConnectionSQL{
-		db:      database,
 		getRows: getrws,
-		exec: ,
+		exec:    exec,
 		tables:  tableNames,
 	}, nil
 }
