@@ -16,15 +16,30 @@ const (
 
 type ConnectionSQL struct {
 	getRows func(string) (*sql.Rows, error)
+	exec    func(string) error
 	tables  map[string]struct{}
 }
 
-func GetObject[T any](csql ConnectionSQL, command string, conversion func(*sql.Rows) *T) *T {
+func GetObject[T any](csql ConnectionSQL, command string, conversion func(*sql.Rows) T) T {
 	ret, err := csql.getRows(command)
 	if err != nil {
 		return nil
 	}
 	return conversion((ret))
+}
+
+func Exec(csql ConnectionSQL, command string) error {
+	return csql.exec(command)
+}
+
+func (c ConnectionSQL) HasTable(str string) bool {
+	_, check := c.tables[str]
+	return check
+}
+
+func (c *ConnectionSQL) AddTable(tableName string, tableDescription string) {
+	c.tables[tableName] = struct{}{}
+	c.exec(fmt.Sprintf("CREATE TABLE %s", tableDescription))
 }
 
 func CreateConnection(dbname string) (*ConnectionSQL, error) {
@@ -33,8 +48,11 @@ func CreateConnection(dbname string) (*ConnectionSQL, error) {
 	if err != nil {
 		return nil, err
 	}
-	ret := func(str string) (*sql.Rows, error) {
+	getrws := func(str string) (*sql.Rows, error) {
 		return database.Query(str)
+	}
+	exec := func(str string) error {
+		go database.Exec(str)
 	}
 	rows, errTable := database.Query("SELECT * FROM pg_catalog.pg_tables")
 	if errTable != nil {
@@ -51,7 +69,9 @@ func CreateConnection(dbname string) (*ConnectionSQL, error) {
 		tableNames[str] = struct{}{}
 	}
 	return &ConnectionSQL{
-		getRows: ret,
+		db:      database,
+		getRows: getrws,
+		exec: ,
 		tables:  tableNames,
 	}, nil
 }
